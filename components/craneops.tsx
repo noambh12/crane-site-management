@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
+import CraneDetails from "./crane-details";
 import {
   can,
   roles,
@@ -321,6 +322,7 @@ export function Workspace({
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [tab, setTab] = useState<Tab>("dashboard");
+  const [selectedCraneId, setSelectedCraneId] = useState<string | null>(null);
   const [cranes, setCranes] = useState<Crane[]>([]),
     [sites, setSites] = useState<Site[]>([]),
     [faults, setFaults] = useState<Fault[]>([]),
@@ -581,6 +583,7 @@ export function Workspace({
     setEditor({ type, record });
   }
   const title = tabs.find((t) => t.id === tab)?.label;
+  const selectedCrane = cranes.find(c => c.id === selectedCraneId);
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -602,6 +605,7 @@ export function Workspace({
               className={tab === t.id ? "active" : ""}
               onClick={() => {
                 setTab(t.id);
+                setSelectedCraneId(null);
                 setSearch("");
                 setNotice("");
               }}
@@ -660,9 +664,9 @@ export function Workspace({
           <div className="page-heading">
             <div>
               <span className="eyebrow">OPERATIONS WORKSPACE</span>
-              <h1>{tab === "dashboard" ? "Fleet overview" : title}</h1>
+              <h1>{selectedCrane ? selectedCrane.name : tab === "dashboard" ? "Fleet overview" : title}</h1>
               <p>
-                {tab === "dashboard"
+                {selectedCrane ? "Crane details · Specifications, site, faults and maintenance." : tab === "dashboard"
                   ? "A clear picture of your fleet, sites and upcoming work."
                   : `Manage your company’s ${tab === "team" ? "people and permissions" : title?.toLowerCase()}.`}
               </p>
@@ -676,7 +680,7 @@ export function Workspace({
                 <RefreshCw size={16} className={loading ? "spin" : ""} />
                 Refresh
               </button>
-              {tab !== "dashboard" && tab !== "team" && can(role, tab) && (
+              {!selectedCrane && tab !== "dashboard" && tab !== "team" && can(role, tab) && (
                 <button className="btn primary" onClick={() => startEdit(tab)}>
                   <Plus size={17} />
                   Add{" "}
@@ -693,6 +697,7 @@ export function Workspace({
           </div>
           {!editor && error && <Notice error>{error}</Notice>}
           {notice && <Notice>{notice}</Notice>}
+          {selectedCrane ? <CraneDetails crane={selectedCrane} site={sites.find(s => s.id === selectedCrane.site_id)} faults={faults} maintenance={maintenance} client={client} companyId={membership.company_id} role={role} onBack={() => setSelectedCraneId(null)} onEdit={() => startEdit("cranes", selectedCrane)} onFault={record => startEdit("faults", record)} onMaintenance={record => startEdit("maintenance", record)} /> : <>
           {tab === "dashboard" && (
             <>
               <section className="metrics">
@@ -918,7 +923,7 @@ export function Workspace({
                     )
                     .map((c) => [
                       <div key="name">
-                        <strong>{c.name}</strong>
+                        <button className="crane-detail-link" aria-label={`View details for ${c.name}`} onClick={() => setSelectedCraneId(c.id)}>{c.name}</button>
                         <small>{c.serial_number}</small>
                       </div>,
                       <div key="model">
@@ -1160,6 +1165,7 @@ export function Workspace({
               )}
             </>
           )}
+          </>}
           <footer className="page-footer">
             <span>
               CraneOps <span className="subtle">/</span> Company operations
