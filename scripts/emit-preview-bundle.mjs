@@ -13,6 +13,7 @@ async function collect(directory) {
   return files;
 }
 const files = await collect("out");
+files.push({ path: "preview-dist/CraneOps-preview.html", content: (await readFile("preview-dist/CraneOps-preview.html")).toString("base64") });
 files.push({ path: "scripts/serve-preview.mjs", content: (await readFile("scripts/serve-preview.mjs")).toString("base64") });
 const buffer = gzipSync(Buffer.from(JSON.stringify(files)));
 if (buffer.length > 2_000_000) throw new Error("Preview bundle exceeds transport limit");
