@@ -2,6 +2,10 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/browser",
   fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  workers: process.env.CI ? 1 : undefined,
+  globalTimeout: 180_000,
+  reporter: process.env.CI ? [["line"], ["html", { open: "never" }]] : "list",
   use: {
     trace: "retain-on-failure",
     launchOptions: {

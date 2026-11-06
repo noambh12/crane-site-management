@@ -11,7 +11,7 @@
 | Production dependency audit | Passed    | `npm audit --omit=dev --audit-level=high`: zero reported vulnerabilities at the time of verification                                      |
 | Hosted Supabase end-to-end  | Not run   | Requires a configured Supabase project, migration, public project connection values and verified test accounts                            |
 
-The normal Playwright browser download returned an invalid archive in this environment. Browser smoke checks subsequently passed with a locally extracted Chromium 153 executable via `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. The repository uses the standard Playwright browser installation in CI. No external browser executable or extra Chromium distribution is committed.
+The normal Playwright browser download returned an invalid archive in this environment. Browser smoke checks subsequently passed with a locally extracted Chromium 153 executable via `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. The initial CI workflow used a fresh Playwright/Ubuntu dependency installation on every run. The updated CI uses the version-matched Playwright Docker image instead; see `CI_TROUBLESHOOTING.md`. No external browser executable or extra Chromium distribution is committed.
 
 The PostgreSQL checks use real embedded PostgreSQL and the production migration, with minimal `auth.users` / `auth.uid()` stubs. They do not test the hosted Supabase Auth service, email delivery, PostgREST transport, token refresh or a full authenticated browser CRUD journey. Follow the README's live acceptance checklist after configuring Supabase.
 

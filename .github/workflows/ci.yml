@@ -2,26 +2,78 @@ name: Verify CraneOps
 on:
   pull_request:
   push:
-    branches: [main, feat/craneops-mvp]
+    branches: [main]
+
+# PR updates replace stale PR runs; branch pushes are not tested twice.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
+
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    name: Lint, types, database and build
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: npm
-      - run: npm ci
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+        timeout-minutes: 5
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
       - run: npm run test:db
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:browser
+
+  browser:
+    name: Chromium desktop and mobile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    container:
+      # Must match the exact @playwright/test version in package.json/package-lock.json.
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --ipc=host
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      PLAYWRIGHT_IMAGE_VERSION: "1.65.0"
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+        timeout-minutes: 5
+      - name: Verify preinstalled Chromium and matching Playwright version
+        run: node scripts/check-playwright.mjs
+        timeout-minutes: 1
+      - name: Run all desktop and mobile browser tests
+        run: npm run test:browser
+        timeout-minutes: 5
+      - name: Upload browser report and failure traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
