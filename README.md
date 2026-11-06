@@ -2,6 +2,14 @@
 
 A working English-language, responsive tower crane operations app built with **Next.js App Router, TypeScript, Tailwind CSS 4, Supabase Auth and PostgreSQL**. It connects to a real Supabase database; there is no demo-data mode. No deployment is configured or performed.
 
+For the existing CraneOps project and the pending security hardening proposal, follow [LOCAL_SETUP.md](LOCAL_SETUP.md). The proposal is tested in an isolated database; it must not be applied to the hosted project without owner approval.
+
+### Private development preview
+
+`/preview` renders the actual workspace components with an isolated, in-memory demo adapter. A persistent **DEMO** banner identifies every screen; no API keys, Supabase calls, real users, or live database writes are involved. Refresh/Reset demo discards changes. The normal `/` route continues to use authenticated Supabase data and never silently falls back to samples.
+
+CI saves a `craneops-web-preview` artifact containing a static build and a dependency-free loopback preview server. This is an artifact only, not a deployment. After extracting, the existing Codex Node runtime can run `node scripts/serve-preview.mjs`; open `http://127.0.0.1:4173/preview`. No public hosting or merge is performed.
+
 ## Features
 
 - Email/password registration, email confirmation and login/logout.
@@ -9,6 +17,7 @@ A working English-language, responsive tower crane operations app built with **N
 - Company isolation enforced by PostgreSQL RLS, including direct API requests.
 - Dashboard with fleet status, active sites, open/critical faults, due maintenance and activity.
 - Create/edit cranes, serial numbers, manufacturer/model, capacity, status and assigned site.
+- Open a crane by clicking its name in Cranes: specifications, assigned site/contact, linked faults, maintenance and the latest 50 activity entries for that crane record. Edit actions follow the existing role permissions; activity reads remain company-scoped.
 - Create/edit construction sites, addresses, contacts and status.
 - Fault reporting, priorities, status tracking and required resolution notes.
 - Services and inspections with due dates, status, notes and repeat intervals.
@@ -21,7 +30,7 @@ A working English-language, responsive tower crane operations app built with **N
 Install **Node.js 24 LTS** and Git, then:
 
 ```sh
-git clone --branch feat/craneops-mvp https://github.com/noambh12/crane-site-management.git
+git clone --branch fix/craneops-security-hardening https://github.com/noambh12/crane-site-management.git
 cd crane-site-management
 npm ci
 ```
@@ -151,3 +160,4 @@ tests/                       Validation tests and browser smoke tests
 ```
 
 Review the pull request before merging. Configure a Supabase project and complete the live checklist before using operational data. Nothing in this repository publishes the app automatically.
+

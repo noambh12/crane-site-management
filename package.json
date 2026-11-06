@@ -3,18 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/validate-env.mjs development",
     "dev": "next dev",
+    "prebuild": "node scripts/validate-env.mjs production",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:db": "node scripts/test-db.mjs",
+    "test:config": "node --test tests/supabase-config.node.mjs",
+    "check:supabase": "node scripts/check-supabase.mjs",
     "test:browser": "playwright test",
     "format:check": "prettier --check app components lib scripts tests *.ts *.mjs *.json README.md"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.81.1",
+    "@supabase/supabase-js": "2.119.0",
     "lucide-react": "^0.468.0",
     "next": "16.4.5",
     "react": "^19.2.0",
@@ -22,6 +26,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "esbuild": "0.28.2",
     "@electric-sql/pglite": "^0.3.14",
     "@playwright/test": "1.65.0",
     "@tailwindcss/postcss": "^4.1.17",
@@ -36,3 +41,4 @@
     "vitest": "^3.2.4"
   }
 }
+

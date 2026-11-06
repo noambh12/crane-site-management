@@ -38,6 +38,9 @@ await db.exec(
     "utf8",
   ),
 );
+// Reproduce Supabase's default authenticated EXECUTE grants before hardening.
+await db.exec("grant execute on all functions in schema public to authenticated");
+await db.exec(await readFile(new URL("../supabase/proposals/harden_function_access.sql", import.meta.url), "utf8"));
 for (let i = 1; i <= 9; i++)
   await query("insert into auth.users values($1,$2,$3)", [
     u(i),
@@ -259,7 +262,7 @@ await check("verified unassigned user can join a company", async () => {
   );
   await as(7);
   assert.equal(
-    (await query("select public.current_company_id() id")).rows[0].id,
+    (await query("select private.current_company_id() id")).rows[0].id,
     a,
   );
 });
@@ -307,5 +310,77 @@ await check("resolved faults require resolution", async () => {
     [a, craneA],
   );
 });
+
+await check("no SECURITY DEFINER functions remain in the exposed public schema", async () => {
+  await as(1);
+  assert.equal((await query("select count(*)::int n from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prosecdef")).rows[0].n, 0);
+  for (const name of ["current_company_id", "has_company_role", "log_record", "prepare_record", "schedule_next_maintenance"]) {
+    assert.equal((await query("select count(*)::int n from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname=$1", [name])).rows[0].n, 0);
+  }
+});
+await check("internal trigger functions deny direct client execution after default grants", async () => {
+  for (const n of [1, null]) {
+    await as(n);
+    for (const name of ["log_record", "prepare_record", "schedule_next_maintenance"]) {
+      assert.equal((await query("select has_function_privilege(current_user,p.oid,'execute') ok from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and p.proname=$1", [name])).rows[0].ok, false);
+    }
+    await denied("select private.log_record()");
+  }
+});
+await check("all private functions deny anonymous execution; private schema denies CREATE", async () => {
+  await as(1);
+  assert.equal((await query("select has_schema_privilege(current_user,'private','create') ok")).rows[0].ok, false);
+  await denied("create function private.intruder() returns int language sql as 'select 1'");
+  await as(null);
+  assert.equal((await query("select count(*)::int n from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and has_function_privilege(current_user,p.oid,'execute')")).rows[0].n, 0);
+  await denied("select public.add_company_member('user7@example.test','company_admin')");
+  await denied("select public.change_member_role($1,'company_admin')", [u(1)]);
+});
+await check("unassigned authenticated account cannot read any tenant data", async () => {
+  await as(8);
+  for (const table of ["companies", "memberships", "sites", "cranes", "faults", "maintenance", "activity_log"]) {
+    assert.equal((await query(`select * from public.${table}`)).rows.length, 0);
+  }
+  await denied("select public.add_company_member('user7@example.test','viewer')");
+  await denied("select public.change_member_role($1,'viewer')", [u(1)]);
+});
+await check("all seven tables isolate both tenants; foreign operational updates return zero", async () => {
+  for (const [n, company, other, crane] of [[1, a, b, craneA], [2, b, a, craneB]]) {
+    await as(n);
+    await query("insert into public.faults(company_id,crane_id,title) values($1,$2,'Isolation fault')", [company, crane]);
+    await query("insert into public.maintenance(company_id,crane_id,title,kind,due_date) values($1,$2,'Isolation service','service',current_date)", [company, crane]);
+  }
+  for (const [n, company, other] of [[1, a, b], [2, b, a]]) {
+    await as(n);
+    for (const table of ["companies", "memberships", "sites", "cranes", "faults", "maintenance", "activity_log"]) {
+      const column = table === "companies" ? "id" : "company_id";
+      const visible = (await query(`select * from public.${table}`)).rows;
+      assert.ok(visible.length > 0);
+      assert.ok(visible.every(row => row[column] === company));
+      assert.equal((await query(`select * from public.${table} where ${column}=$1`, [other])).rows.length, 0);
+    }
+    for (const table of ["sites", "cranes", "faults", "maintenance"]) {
+      const field = ["sites", "cranes"].includes(table) ? "name" : "title";
+      assert.equal((await query(`update public.${table} set ${field}='Foreign edit' where company_id=$1 returning id`, [other])).rows.length, 0);
+      await denied(`delete from public.${table} where company_id=$1`, [other]);
+    }
+  }
+});
+await check("anonymous access denied on all seven tables", async () => {
+  await as(null);
+  for (const table of ["companies", "memberships", "sites", "cranes", "faults", "maintenance", "activity_log"]) {
+    await denied(`select * from public.${table}`);
+  }
+});
+await check("audit triggers still work without direct EXECUTE privilege", async () => {
+  await as(1);
+  const site = (await query("insert into public.sites(company_id,name,address) values($1,'Audit regression','Address') returning id", [a])).rows[0].id;
+  const logs = (await query("select * from public.activity_log where entity_id=$1", [site])).rows;
+  assert.equal(logs.length, 1);
+  assert.equal(logs[0].company_id, a);
+  assert.equal(logs[0].actor_id, u(1));
+});
+
 await db.close();
 console.log(`\n${passed} database security and behavior checks passed.`);
+

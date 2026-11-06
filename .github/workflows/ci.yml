@@ -33,8 +33,28 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:config
       - run: npm run test:db
       - run: npm run build
+      - name: Build isolated static demo preview
+        run: npm run build
+        env:
+          CRANEOPS_STATIC_PREVIEW: "1"
+          NEXT_PUBLIC_SUPABASE_URL: ""
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ""
+      - name: Save preview bundle without publishing
+        run: node scripts/build-offline-preview.mjs
+      - name: Save preview artifacts without publishing
+        uses: actions/upload-artifact@v4
+        with:
+          name: craneops-web-preview
+          path: |
+            out/
+            scripts/serve-preview.mjs
+            preview-dist/CraneOps-preview.html
+          retention-days: 7
+      - name: Export credential-free preview for local development transport
+        run: node scripts/emit-preview-bundle.mjs
 
   browser:
     name: Chromium desktop and mobile
@@ -65,6 +85,8 @@ jobs:
         run: node scripts/check-playwright.mjs
         timeout-minutes: 1
       - name: Run all desktop and mobile browser tests
+        run: node scripts/build-offline-preview.mjs
+      - name: Test all desktop and mobile browser flows
         run: npm run test:browser
         timeout-minutes: 5
       - name: Upload browser report and failure traces
@@ -77,3 +99,4 @@ jobs:
             test-results/
           if-no-files-found: ignore
           retention-days: 7
+
