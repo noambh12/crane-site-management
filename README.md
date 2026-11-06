@@ -17,6 +17,7 @@ CI saves a `craneops-web-preview` artifact containing a static build and a depen
 - Company isolation enforced by PostgreSQL RLS, including direct API requests.
 - Dashboard with fleet status, active sites, open/critical faults, due maintenance and activity.
 - Create/edit cranes, serial numbers, manufacturer/model, capacity, status and assigned site.
+- Open a crane by clicking its name in Cranes: specifications, assigned site/contact, linked faults, maintenance and the latest 50 activity entries for that crane record. Edit actions follow the existing role permissions; activity reads remain company-scoped.
 - Create/edit construction sites, addresses, contacts and status.
 - Fault reporting, priorities, status tracking and required resolution notes.
 - Services and inspections with due dates, status, notes and repeat intervals.

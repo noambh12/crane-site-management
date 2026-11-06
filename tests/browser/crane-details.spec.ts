@@ -7,6 +7,7 @@ for (const source of ["development", "offline"]) {
     page.on("pageerror", error => errors.push(error.message));
     const url = source === "development" ? "http://127.0.0.1:3000/preview" : pathToFileURL(resolve("preview-dist/CraneOps-preview.html")).href;
     await page.goto(url);
+    await test.step("Open the crane and verify related records", async () => {
     await page.getByRole("navigation").getByRole("button", { name: "Cranes", exact: true }).click();
     await page.getByRole("button", { name: "View details for Tower Alpha", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Tower Alpha", exact: true })).toBeVisible();
@@ -19,11 +20,15 @@ for (const source of ["development", "offline"]) {
     await expect(maintenance.getByText("Monthly safety inspection", { exact: true })).toBeVisible();
     await expect(maintenance.getByText("Hydraulic system service", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Crane activity" }).getByText("Crane record created", { exact: true })).toBeVisible();
+    });
+    await test.step("Edit the crane and verify its refreshed activity", async () => {
     await page.getByRole("button", { name: "Edit crane", exact: true }).click();
     await page.getByLabel("Crane name", { exact: true }).fill("Tower Alpha Updated");
     await page.getByRole("button", { name: "Save", exact: false }).click();
     await expect(page.getByRole("heading", { name: "Tower Alpha Updated", exact: true })).toBeVisible();
     await expect(page.getByRole("region", { name: "Crane activity" }).getByText("Crane record updated", { exact: true })).toBeVisible();
+    });
+    await test.step("Return to the list and verify an unassigned crane", async () => {
     await page.getByRole("button", { name: "Back to cranes", exact: false }).click();
     await page.getByRole("button", { name: "View details for Tower Charlie", exact: true }).click();
     await expect(page.getByText("No construction site assigned.", { exact: true })).toBeVisible();
@@ -33,6 +38,7 @@ for (const source of ["development", "offline"]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.getByRole("navigation").getByRole("button", { name: "Dashboard", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Fleet overview" })).toBeVisible();
+    });
     expect(errors).toEqual([]);
   });
 }
