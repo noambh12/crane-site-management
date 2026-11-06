@@ -4,6 +4,12 @@ A working English-language, responsive tower crane operations app built with **N
 
 For the existing CraneOps project and the pending security hardening proposal, follow [LOCAL_SETUP.md](LOCAL_SETUP.md). The proposal is tested in an isolated database; it must not be applied to the hosted project without owner approval.
 
+### Private development preview
+
+`/preview` renders the actual workspace components with an isolated, in-memory demo adapter. A persistent **DEMO** banner identifies every screen; no API keys, Supabase calls, real users, or live database writes are involved. Refresh/Reset demo discards changes. The normal `/` route continues to use authenticated Supabase data and never silently falls back to samples.
+
+CI saves a `craneops-web-preview` artifact containing a static build and a dependency-free loopback preview server. This is an artifact only, not a deployment. After extracting, the existing Codex Node runtime can run `node scripts/serve-preview.mjs`; open `http://127.0.0.1:4173/preview`. No public hosting or merge is performed.
+
 ## Features
 
 - Email/password registration, email confirmation and login/logout.

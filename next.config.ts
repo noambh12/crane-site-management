@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
+  ...(process.env.CRANEOPS_STATIC_PREVIEW === "1" ? { output: "export" as const } : {}),
   poweredByHeader: false,
   distDir: process.env.CRANEOPS_TEST_DIST_DIR ?? ".next",
   async headers() {
+    if (process.env.CRANEOPS_STATIC_PREVIEW === "1") return [];
     return [
       {
         source: "/(.*)",
@@ -20,3 +22,4 @@ const config: NextConfig = {
   },
 };
 export default config;
+

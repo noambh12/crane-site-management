@@ -305,12 +305,14 @@ async function allRows<T>(
     if (data.length < 1000) return result;
   }
 }
-function Workspace({
+export function Workspace({
   client,
   session,
+  demo = false,
 }: {
   client: SupabaseClient;
   session: Session;
+  demo?: boolean;
 }) {
   const [membership, setMembership] = useState<Membership | null>(null),
     [company, setCompany] = useState<Company | null>(null),
@@ -479,7 +481,7 @@ function Workspace({
       );
     } else {
       setEditor(null);
-      setNotice("Changes saved.");
+      setNotice(demo ? "Demo changes saved in this tab only. Refresh the page to reset." : "Changes saved.");
       await load();
     }
     setBusy(false);
@@ -605,7 +607,7 @@ function Workspace({
               }}
             >
               <t.icon size={19} />
-              {t.label}
+              {demo ? ({ dashboard: "Dashboard", cranes: "Cranes", sites: "Sites", faults: "Faults", maintenance: "Maintenance", team: "Team & access" }[t.id]) : t.label}
               {t.id === "faults" && openFaults.length > 0 && (
                 <span className="nav-count">{openFaults.length}</span>
               )}
@@ -614,8 +616,8 @@ function Workspace({
         </nav>
         <div className="sidebar-bottom">
           <div className="workspace-note">
-            <span className="live-dot" /> Connected workspace
-            <small>Live data · Supabase</small>
+            <span className="live-dot" /> {demo ? "Demo workspace" : "Connected workspace"}
+            <small>{demo ? "Sample data · No database connection" : "Live data · Supabase"}</small>
           </div>
           <div className="user-info">
             <span className="user-avatar">
@@ -637,6 +639,7 @@ function Workspace({
         </div>
       </aside>
       <div className="main-wrap">
+        {demo && <div className="demo-banner" role="status"><strong>DEMO · מצב הדגמה</strong><span>Sample data only — not real company data. Changes stay in this tab; no Supabase requests.</span><button type="button" onClick={() => window.location.reload()}>Reset demo</button></div>}
         <header className="topbar">
           <div>
             Workspace <span>/</span> <strong>{title}</strong>
@@ -1453,3 +1456,4 @@ function EditorFields({
     </div>
   );
 }
+

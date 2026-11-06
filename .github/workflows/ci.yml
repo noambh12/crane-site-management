@@ -36,6 +36,20 @@ jobs:
       - run: npm run test:config
       - run: npm run test:db
       - run: npm run build
+      - name: Build isolated static demo preview
+        run: npm run build
+        env:
+          CRANEOPS_STATIC_PREVIEW: "1"
+          NEXT_PUBLIC_SUPABASE_URL: ""
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ""
+      - name: Save preview bundle without publishing
+        uses: actions/upload-artifact@v4
+        with:
+          name: craneops-web-preview
+          path: |
+            out/
+            scripts/serve-preview.mjs
+          retention-days: 7
 
   browser:
     name: Chromium desktop and mobile
