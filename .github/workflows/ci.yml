@@ -50,6 +50,8 @@ jobs:
             out/
             scripts/serve-preview.mjs
           retention-days: 7
+      - name: Export credential-free preview for local development transport
+        run: node scripts/emit-preview-bundle.mjs
 
   browser:
     name: Chromium desktop and mobile

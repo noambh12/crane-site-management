@@ -8,7 +8,7 @@ test("demo supports all five screens, local CRUD and reset without remote reques
   await expect(page.getByRole("heading", { name: "Fleet overview" })).toBeVisible();
   const nav = page.getByRole("navigation");
   for (const [name, sample] of [["Cranes", "Tower Alpha"], ["Sites", "Harbor Heights"], ["Maintenance", "Hydraulic system service"], ["Faults", "Hydraulic pressure warning"]]) {
-    await nav.getByRole("button", { name, exact: true }).click();
+    await nav.getByRole("button", { name: new RegExp(`^${name}(?: \\d+)?$`) }).click();
     await expect(page.getByText(sample, { exact: true }).first()).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
