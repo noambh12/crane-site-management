@@ -322,7 +322,7 @@ await check("internal trigger functions deny direct client execution after defau
   for (const n of [1, null]) {
     await as(n);
     for (const name of ["log_record", "prepare_record", "schedule_next_maintenance"]) {
-      assert.equal((await query("select has_function_privilege(current_user,$1,'execute') ok", [`private.${name}()`])).rows[0].ok, false);
+      assert.equal((await query("select has_function_privilege(current_user,p.oid,'execute') ok from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and p.proname=$1", [name])).rows[0].ok, false);
     }
     await denied("select private.log_record()");
   }

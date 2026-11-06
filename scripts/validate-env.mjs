@@ -1,7 +1,6 @@
 import { publicSupabaseConfig } from "../lib/supabase-config.ts";
-try { process.loadEnvFile(".env.local"); } catch (error) {
-  if (error.code !== "ENOENT") throw new Error("Cannot read local environment file.");
-}
+import { loadLocalEnv } from "./load-local-env.mjs";
+loadLocalEnv(process.argv[2] ?? "development");
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 // CI/setup may build without credentials. Partially configured or unsafe values fail closed.

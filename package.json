@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/validate-env.mjs",
+    "predev": "node scripts/validate-env.mjs development",
     "dev": "next dev",
-    "prebuild": "node scripts/validate-env.mjs",
+    "prebuild": "node scripts/validate-env.mjs production",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
