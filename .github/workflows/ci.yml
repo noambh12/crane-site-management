@@ -33,6 +33,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:config
       - run: npm run test:db
       - run: npm run build
 
@@ -77,3 +78,4 @@ jobs:
             test-results/
           if-no-files-found: ignore
           retention-days: 7
+

@@ -35,9 +35,10 @@ export default defineConfig({
       env: {
         CRANEOPS_TEST_DIST_DIR: ".next-auth-test",
         NEXT_PUBLIC_SUPABASE_URL: "https://craneops-tests.supabase.co",
-        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "public-test-placeholder",
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test-placeholder",
       },
       reuseExistingServer: false,
     },
   ],
 });
+

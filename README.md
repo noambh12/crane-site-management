@@ -2,6 +2,8 @@
 
 A working English-language, responsive tower crane operations app built with **Next.js App Router, TypeScript, Tailwind CSS 4, Supabase Auth and PostgreSQL**. It connects to a real Supabase database; there is no demo-data mode. No deployment is configured or performed.
 
+For the existing CraneOps project and the pending security hardening proposal, follow [LOCAL_SETUP.md](LOCAL_SETUP.md). The proposal is tested in an isolated database; it must not be applied to the hosted project without owner approval.
+
 ## Features
 
 - Email/password registration, email confirmation and login/logout.
@@ -21,7 +23,7 @@ A working English-language, responsive tower crane operations app built with **N
 Install **Node.js 24 LTS** and Git, then:
 
 ```sh
-git clone --branch feat/craneops-mvp https://github.com/noambh12/crane-site-management.git
+git clone --branch fix/craneops-security-hardening https://github.com/noambh12/crane-site-management.git
 cd crane-site-management
 npm ci
 ```
@@ -151,3 +153,4 @@ tests/                       Validation tests and browser smoke tests
 ```
 
 Review the pull request before merging. Configure a Supabase project and complete the live checklist before using operational data. Nothing in this repository publishes the app automatically.
+
